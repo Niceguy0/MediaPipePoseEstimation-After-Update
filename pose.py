@@ -54,12 +54,9 @@ def curl_count(pose_landmarks):
     angle = calculate_angle(left_shoulder, left_elbow, left_wrist)
     global stage, count
     if angle > 160:
-
         stage = "down"
         return "down"
     if angle < 30:
-        
-
         if stage == "down":
             count += 1
             stage = "up"
@@ -72,6 +69,7 @@ print("--- Start Webcam ---")
 cap = cv2.VideoCapture(0)
 
 with vision.PoseLandmarker.create_from_options(options) as landmarker:
+    i = 0
     while cap.isOpened():
         success, frame = cap.read()
         if not success:
@@ -101,17 +99,25 @@ with vision.PoseLandmarker.create_from_options(options) as landmarker:
                         p1 = (int(start_lm.x * w), int(start_lm.y * h))
                         p2 = (int(end_lm.x * w), int(end_lm.y * h))
                         cv2.line(frame, p1, p2, (0, 255, 0), 2)
-
+                Ex=[curl_count(pose_landmarks)]
+                Ex[i]
                 # DRAW POINTS
                 for lm in pose_landmarks:
                     if lm.visibility > 0.5:
                         cv2.circle(frame, (int(lm.x * w), int(lm.y * h)), 3, (255, 0, 0), -1)
-            curl_count(pose_landmarks)
+            
+
+
+
+
             cv2.putText(frame, f'Curl Count: {count}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
         # 4. Display
         cv2.imshow('MediaPipe Pose - Modern Tasks API', frame)
-        
+        if cv2.waitKey(1) & 0xFF == ord('n'):
+            i += 1
+            if i > len(Ex)-1:
+                i = 0
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
