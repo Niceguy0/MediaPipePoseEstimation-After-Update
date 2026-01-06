@@ -1,3 +1,4 @@
+import math
 import cv2
 import mediapipe as mp
 import time
@@ -13,10 +14,7 @@ PoseLandmarkerResult = mp.tasks.vision.PoseLandmarkerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
 
 POSE_CONNECTIONS = [
-    # Facial landmarks (Eyes, Nose, Mouth)
-    (0, 1), (1, 2), (2, 3), (3, 7),
-    (0, 4), (4, 5), (5, 6), (6, 8),
-    (9, 10),
+    
     # Torso
     (11, 12), (11, 13), (13, 15), (15, 17), (15, 19), (15, 21), (17, 19),
     (12, 14), (14, 16), (16, 18), (16, 20), (16, 22), (18, 20),
@@ -28,12 +26,47 @@ POSE_CONNECTIONS = [
 
 latest_result = None
 
+def calculate_angle(a, b, c):
+    radians = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x)
+    angle = abs(radians * 180.0 / math.pi)
+    
+    if angle > 180.0:
+        angle = 360 - angle
+        
+    return angle
+
 def result_callback(result: vision.PoseLandmarkerResult, output_image: mp.Image, timestamp_ms: int):
     """Callback function to grab results from the landmarker."""
     global latest_result
     latest_result = result
 base_options = python.BaseOptions(model_asset_path=model_path)
 options = vision.PoseLandmarkerOptions(base_options=base_options, running_mode=VisionRunningMode.LIVE_STREAM, result_callback=result_callback,min_pose_detection_confidence=0.5,min_pose_presence_confidence=0.5)
+global count
+count = 0
+stage = None
+
+def curl_count(pose_landmarks):
+    
+    left_shoulder = pose_landmarks[11]
+    left_elbow = pose_landmarks[13]
+    left_wrist = pose_landmarks[15]
+
+    angle = calculate_angle(left_shoulder, left_elbow, left_wrist)
+    global stage, count
+    if angle > 160:
+
+        stage = "down"
+        return "down"
+    if angle < 30:
+        
+
+        if stage == "down":
+            count += 1
+            stage = "up"
+        return "up"
+    return None
+
+
 
 print("--- Start Webcam ---")
 cap = cv2.VideoCapture(0)
@@ -73,6 +106,8 @@ with vision.PoseLandmarker.create_from_options(options) as landmarker:
                 for lm in pose_landmarks:
                     if lm.visibility > 0.5:
                         cv2.circle(frame, (int(lm.x * w), int(lm.y * h)), 3, (255, 0, 0), -1)
+            curl_count(pose_landmarks)
+            cv2.putText(frame, f'Curl Count: {count}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
         # 4. Display
         cv2.imshow('MediaPipe Pose - Modern Tasks API', frame)
