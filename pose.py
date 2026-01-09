@@ -44,14 +44,20 @@ options = vision.PoseLandmarkerOptions(base_options=base_options, running_mode=V
 global count
 count = 0
 stage = None
+side = "left"
 
 def curl_count(pose_landmarks):
     
     left_shoulder = pose_landmarks[11]
     left_elbow = pose_landmarks[13]
     left_wrist = pose_landmarks[15]
-
-    angle = calculate_angle(left_shoulder, left_elbow, left_wrist)
+    right_shoulder = pose_landmarks[12]
+    right_elbow = pose_landmarks[14]
+    right_wrist = pose_landmarks[16]
+    if side == "right":
+        angle = calculate_angle(right_shoulder, right_elbow, right_wrist)
+    else:
+        angle = calculate_angle(left_shoulder, left_elbow, left_wrist)
     global stage, count
     if angle > 160:
         stage = "down"
@@ -118,6 +124,11 @@ with vision.PoseLandmarker.create_from_options(options) as landmarker:
             i += 1
             if i > len(Ex)-1:
                 i = 0
+        if cv2.waitKey(1) & 0xFF == ord('s'):
+            if side == "left":
+                side = "right"
+            elif side == "right":
+                side = "left"
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
