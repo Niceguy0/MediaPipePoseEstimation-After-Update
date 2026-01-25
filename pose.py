@@ -115,8 +115,8 @@ with vision.PoseLandmarker.create_from_options(options) as landmarker:
 
 
 
-
-            cv2.putText(frame, f'Curl Count: {count}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+            cv2.putText(frame, f'Stage: {stage} Side: {side}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+            cv2.putText(frame, f'Curl Count: {count}', (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
         # 4. Display
         cv2.imshow('MediaPipe Pose - Modern Tasks API', frame)
